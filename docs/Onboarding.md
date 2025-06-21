@@ -15,8 +15,75 @@ This is the user interface that will be used to interact with the KernelCI Dashb
 Here the user can see the data returned by the API in a more user-friendly way and request diferents forms of visualization.
 This frontend is written in TypeScript and uses the React library.
 
-> Note:
+> **Note:**
+> The recommended and easiest way to get started is to use Docker Compose, which will set up all required services (backend, frontend, Redis, database proxy, etc.) automatically. See the next section for details.
+
 > The Dashboard is live in the following link: [KernelCI Dashboard](https://dashboard.kernelci.org/)
+
+---
+
+## Running the Dashboard with Docker
+
+**This is the recommended way to get all services running together with minimal setup.**
+
+Running the KernelCI Dashboard with Docker avoids the need to install and configure dependencies manually. It will start the backend, frontend, Redis, database proxy, and other required services.
+
+### Prerequisites
+- [Docker](https://docs.docker.com/get-docker/) and [Docker Compose](https://docs.docker.com/compose/install/) installed on your system.
+- Access credentials for the database and Google Cloud (see the main README for details).
+
+### Steps
+1. **Clone the repository** (if you haven't already):
+   ```bash
+   git clone https://github.com/kernelci/dashboard.git
+   cd dashboard
+   ```
+2. **Set up environment variables and secrets:**
+   - Copy the example environment file and edit as needed:
+     ```bash
+     cp ./dashboard/.env.example ./dashboard/.env
+     ```
+   - Create a secret file with the database password:
+     ```bash
+     mkdir -p backend/runtime/secrets
+     echo <password> > backend/runtime/secrets/postgres_password_secret
+     ```
+   - Make sure you have your `application_default_credentials.json` in the project root for Google Cloud access.
+
+3. **Start all services:**
+   ```bash
+   docker compose up --build -d
+   ```
+   This will start the backend, frontend, Redis, database proxy, and other required services. The frontend will be available at `http://localhost` and the backend API at `http://localhost/api`.
+
+4. **Stopping services:**
+   ```bash
+   docker compose down
+   ```
+
+#### Tips
+- If you need to pass environment variables, use `sudo -E docker compose up --build -d` or run everything as root with `sudo su`.
+- You can set `DEBUG=True` in your `docker-compose.yml` for more verbose output.
+- For more details, see the main `README.md`.
+
+---
+
+## Redis Requirements
+
+**Redis is required for caching and background tasks in the backend.**
+
+- **When running with Docker Compose:**
+  - Redis is started as a container and is available to the backend at the hostname `redis` (as set in `docker-compose.yml`). No manual setup is needed.
+
+- **When running locally (not in Docker):**
+  - You must have Redis installed and running on your machine. On Linux, you can install it with:
+    ```bash
+    sudo apt-get install redis-server
+    sudo systemctl start redis-server
+    ```
+  - The backend expects Redis to be available at `localhost:6379` by default, or you can configure the `REDIS_HOST` environment variable.
+
+---
 
 ## Tasks
 > Note:
@@ -43,7 +110,7 @@ You can use this script to run the backend with environment variables:
 ```bash
 export DEBUG_SQL_QUERY=False # SQL Queries are very verbose, so it's better to keep this variable as False unless needed
 export DEBUG=True 
-#\"NAME\": \"${DB_DEFAULT_NAME:=playground_kcidb}\",
+#"NAME": "${DB_DEFAULT_NAME:=playground_kcidb}",
 export DB_DEFAULT="{
     \"ENGINE\": \"${DB_DEFAULT_ENGINE:=django.db.backends.postgresql}\",
     \"NAME\": \"kcidb\",
@@ -91,15 +158,4 @@ Definition of Done: Run a SQL query that gets all the tests from a specific Tree
 
 Definition of Done: You have the KernelCI Dashboard frontend running locally.
 
-### Task 5: Complete a real Task
-1. Go to https://github.com/kernelci/dashboard/issues and search for issues with the label `good first issue`.
-1. Pick any of those and assign to yourself. 
-1. Put in the Current Sprint in the Github project if it is not there already.
-1. Submit a PR (Don't forget to use conventional commits)
-1. Address the feedback that you receive
-1. Get the PR merged
-
-Definition of Done: Get a Task done and merged in the KernelCI Dashboard project.
-
-
-
+---
